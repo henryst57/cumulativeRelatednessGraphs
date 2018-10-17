@@ -1,0 +1,170 @@
+Requirements:
+	UMLS::Association v1.7 or higher
+
+#################################################################
+#                Steps to Perform Evaluation
+#################################################################
+
+Steps to perform evaluation are:
+
+1) Generate a set of C terms
+2) Rank thise C terms
+3) Decide on a gold standard (Co-occurrence or SemMedDB are provided)
+4) Generate Cumulative Relatdness Graph
+
+This README provides all steps used to generate the results provided.
+However, if you are developing a new ranking or linking method, all
+preprocessing methods can be skipped, and only the 
+createCumulativeRelatednessGraph.pl script needs to be used. Creating
+and scoring a c-term vector can be done using your own code, then a CRG 
+can be created using createCumulativeRelatdnessGraph.pl.
+
+All steps are outlined below
+
+
+
+#################################################################
+#       PREPROCESSING
+#################################################################
+---  GENERATE RANDOM START CUIS (code/preprocessing/startCuiCreation)
+1) Generate Random Cuis that are used in the evaluation.
+      run generateRandomCuis.pl to generate 50 random CUIs for semantic types (T047, T121, T184, and T200)
+	
+	This produces the output files:
+		randomCuis_[T047|T121|T184|T200]
+
+
+---   GET ASSOCIATION VECTORS (code/preprocessings/vectorCreation)
+2) Get all of the association vectors used in comparison
+	a) run vectorCreationCommands.pl to generate all the vectors used in comparison. This include current direct, future direct, and all of the indirect association vector methods
+
+	This produces all of the association measure-based methods in the vectorOutput folder, including:
+		current association estimates:
+			vectors_freq_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_lta
+			vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_lsa			
+			vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_lta
+			vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_mwa
+			vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_sbc
+
+		direct associations (gold standards)
+			vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]
+			vectors_x2_1975_2015_window8_threshold1_randomCuis_T047|T121|T184|T200]
+
+	b) run createRandomVectors.pl to create the vectors of random scores used as a random baseline
+
+
+---  GET COSINE VECTORS (code/preprocessings/vectorCreation)
+3) Get the cosine-based vectors used in comparison by computing cosine distances for the random cuis against all cuis in the vocabulary
+	run computeCosineForCuiFile.pl, this will produce the cosine distance vectors for each of the semantic type files using both explicit co-occurrence vectors, and word2vec vectors. 
+
+	This produces the vectors files:
+		vectors_explicitCosine_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]
+		vectors_word2vecCosine_1975_1999_window8_randomCuis_[T047|T121|T184|T200]
+
+
+
+
+---   C TERM GENERATION (code/preprocessing/cTermGeneration/)
+4) This is where I generate C-term vectors for different term generation methods. It generates C terms for ABC, all, and predicateABC
+
+	run ABCTermGeneration.pl - this will generate the cTerm files using ABC model using co-occurrences and predicates. Files produced are:
+		cTerms_[T047|T121|T184|T200]_coocABC
+		cTerms_[T047|T121|T184|T200]_predicateABC
+
+	run makeCTermVector.pl - this will make score vectors using a vector file of all possible scores and the c-terms files. Files produced are:
+		vectors_freq_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_lta_[coocABC|predicateABC]
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_[T047|T121|T184|T200]_sbc_[coocABC|predicateABC]
+		vectors_word2vecCosine_1975_1999_window8_randomCuis_[T047|T121|T184|T200]_[coocABC|predicateABC]
+
+
+---   CREATE ALL SEMANTIC TYPE FILES (code/preprocessing/vectorCreation/)
+4) run combineVectorFiles.pl - this will combine the semantic type vector files into a single 'all' vector file. The script combines for the ABC linking files as well as the all terms files. Files Created are:
+		vectors_explicitCosine_1975_1999_window8_ordered_threshold1_randomCuis_all
+		vectors_freq_1975_1999_window8_ordered_threshold1_randomCuis_all		
+		vectors_freq_1975_1999_window8_ordered_threshold1_randomCuis_all_coocABC
+		vectors_freq_1975_1999_window8_ordered_threshold1_randomCuis_all_predicateABC
+		vectors_random_1975_1999_window8_ordered_threshold1_randomCuis_all
+		vectors_word2vecCosine_1975_1999_window8_ordered_threshold1_randomCuis_all
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_lsa
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_lta
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_mwa
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_sbc
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_sbc_coocABC
+		vectors_x2_1975_1999_window8_ordered_threshold1_randomCuis_all_sbc_predicateABC
+
+
+---   CREATE SEMMEDDB GOLD STANDARD (code/preprocessing/semmedDB)
+6) assignScores.pl - creates a gold standard using semmedDB co-occurrences and whole matrix scores. This is used to compare the semmedDB gold standard to the co-occurrence matrix gold standard
+
+
+
+#################################################################
+#       Generate Cumulative Relatedness Graphs (code/evaluation/)
+#################################################################
+---
+1) Generate the Cumulative Relatedness Graphs (CRGs)
+	run runCreateCumulativeRelatednessGraph.pl to produce the CRGs used for evaluation. This creates all files in the results folder, spcifically:
+		crg_ideal		
+		crg_coocABC_[ltc|sbc|word2vecCosine]
+		crg_predicateABC_[ltc|sbc|word2vecCosine]		
+		crg_semmed_ideal
+		crg_semmed_coocABC_[ltc|sbc|word2vecCosine]
+		crg_semmed_predicateABC_[ltc|sbc|word2vecCosine]
+		crg_allTerms_[explicitCosine|ltc|random|word2vecCosine|directX2|lsa|lta|mwa|sbc]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###### TODO do we need this anymore?
+
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+       Meta Analysis
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+---
+1) Compute Correlation Coefficients between the indirect and direct scores
+	
+	a) compute current-indirect to current-direct correlations
+		a1) run computePearsons.pl on each current-indirect file vs idealCurrent to generate pearsons correlation coefficient
+		a2) run computeSpearmans.pl on each current-indirect file vs idealCurrent to generate spearman's correlation coefficient
+
+	b) compute current-indirect to future-direct correlations
+		b1) Remove any words that occur in the past - since we are interested in how well the future terms are correlated, we first must remove all terms that occur in the past from the vectors before computing the correlations. If these terms are kept, this becomes almost identical to the current to current correlations, sine there are more past words than future only words, and the 1975-1999 scores for these words are very similar to the 1975-2015 scores.
+
+			This generates the vector files:
+				vectors_x2_1975_2015_window8_threshold1_randomCuis_[T047|T121|T184|T200]_pastOnly_futureOnly
+
+			b2) run computePearsons.pl on each current-indirect file vs b1's vector to generate pearsons correlation coefficient
+
+			b3) run computeSpearmans.pl on each current-indirect file vs b1's vector to generate spearman's correlation coefficient
+
+
+
