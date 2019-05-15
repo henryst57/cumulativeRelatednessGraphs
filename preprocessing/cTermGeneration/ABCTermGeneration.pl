@@ -5,6 +5,7 @@
 use strict;
 use warnings;
 
+<<<<<<< HEAD
 my $startTermFile = 'raynaudStartCuis';
 my $matrixFile = '../../../rawData/1975_2015_window8_threshold1';
 my $outputFile = 'cTerms_raynaud_full';
@@ -13,6 +14,8 @@ my $outputFile = 'cTerms_raynaud_full';
 
 
 =comment
+=======
+>>>>>>> 396740052140c61f1ee1fed75122a41212ab4bca
 #user input
 ###### Co-occurrence Based
 my $startTermFile = '../../../startCuis/randomCuis_T047';
@@ -52,7 +55,11 @@ $outputFile = '../../../preprocessedData/cTerms_T184_predicateABC';
 $startTermFile = '../../../startCuis/randomCuis_T200';
 $outputFile = '../../../preprocessedData/cTerms_T200_predicateABC';
 &ABCGeneration($startTermFile, $matrixFile, $outputFile);
+<<<<<<< HEAD
 =cut
+=======
+
+>>>>>>> 396740052140c61f1ee1fed75122a41212ab4bca
 
 
 #generates target terms for each start term using the ABC co-occurrence model

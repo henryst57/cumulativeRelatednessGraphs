@@ -445,6 +445,7 @@ sub outputResults {
 	$average[$i]/= $numToAverage;
     }
 
+<<<<<<< HEAD
 
     #calculate the area under the curve
     my $auc = 0;
@@ -458,13 +459,19 @@ sub outputResults {
 
 
 
+=======
+>>>>>>> 396740052140c61f1ee1fed75122a41212ab4bca
 ####### Output results
 
     #output the results
     open OUT, ">$outFile" or die ("ERROR: cannot open outFile: $outFile\n");
 
     #print out title row
+<<<<<<< HEAD
     print OUT "average, auc = $auc\t";
+=======
+    print OUT "average\t";
+>>>>>>> 396740052140c61f1ee1fed75122a41212ab4bca
     foreach my $cui (sort keys %{$cumulativeSumsRef}) {
 	print OUT "$cui\t"
     }
